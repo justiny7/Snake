@@ -10,14 +10,25 @@ import java.net.URL;
 public class Block {
 	private Image img; 	
 	private AffineTransform tx;
-	private double scale = 0.1; // scales for images
+	private double scale; // scales for images
+	private int blockSize = 40;
 	
 	private int x, y; // coordinates
 	
-	public Block(int x, int y) {
-		this.x = x;
-		this.y = y;
+	public void setScale(double scale) {
+		this.scale = scale;
+	}
+	public Block(int x, int y, int type) {
+		this.x = x * blockSize;
+		this.y = y * blockSize;
 		
+		if (type == 0) {
+			img = getImage("/imgs/red_apple.png");
+			scale = 0.3;
+		} else if (type == 1) {
+			img = getImage("/imgs/emerald_block.png");
+			scale = 0.12;
+		}
 		tx = AffineTransform.getTranslateInstance(0, 0);
 	}
 	

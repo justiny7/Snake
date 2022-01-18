@@ -28,10 +28,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int width = 600, height = 600, blockSize = 40;
 	private int rows = height / blockSize, cols = width / blockSize;
 	private int aX, aY, sY, sX;
+	private int direction;
+	boolean gameOver = true, buffed = false;
 	ArrayList<Block> snake;
 	Block apple;
-	
-	boolean gameOver = true;
 	
 	// images + music
 	
@@ -40,27 +40,42 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int rand(int lo, int hi) { // random number between lo and hi
 		return (int)(Math.random() * (hi - lo + 1)) + lo;
 	}
-	private void reset() { // reset round
+	private void reset_apple() {
 		aX = rand(0, cols - 1);
 		aY = rand(0, rows - 1);
-		apple = new Block(aX, aY);
+		apple = new Block(aX, aY, 0);
+		
+		int rng = rand(1, 100);
+		if (rng % 5 == 0) {
+			apple.changePicture("/imgs/buffed_apple.png");
+			buffed = true;
+		} else {
+			buffed = false;
+		}
+	}
+	private void reset() { // reset round
+		reset_apple();
 		
 		snake = new ArrayList<Block>();
-		snake.add(new Block(1, 7));
-		snake.add(new Block(1, 8));
-		snake.add(new Block(1, 9));
-		snake.add(new Block(1, 10));
+		snake.add(new Block(1, 6, 1));
+		snake.add(new Block(2, 6, 1));
+		snake.add(new Block(3, 6, 1));
+		snake.add(new Block(4, 6, 1));
+		sX = 4;
+		sY = 6;
+		direction = 0;
 	}
 	public void paint(Graphics g) {
+		if (gameOver) {
+			reset();
+			gameOver = false;
+			return;
+		}
+		
 		super.paintComponent(g);
 		apple.paint(g);
 		for (Block b : snake)
 			b.paint(g);
-		
-		if (gameOver) {
-			reset();
-			return;
-		}
 		
 		;
 	}

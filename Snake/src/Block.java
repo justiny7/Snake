@@ -24,7 +24,7 @@ public class Block {
 		
 		if (type == 0) {
 			img = getImage("/imgs/red_apple.png");
-			scale = 0.3;
+			scale = 0.25;
 		} else if (type == 1) {
 			img = getImage("/imgs/emerald_block.png");
 			scale = 0.12;
@@ -64,6 +64,13 @@ public class Block {
 			e.printStackTrace();
 		}
 		return tempImage;
+	}
+	
+	public int getX() {
+		return x / blockSize;
+	}
+	public int getY() {
+		return y / blockSize;
 	}
 
 }

@@ -28,11 +28,13 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int width = 607, height = 630, blockSize = 40;
 	private int rows = 15, cols = 15;
 	private int score;
+	private int numBarriers = 15;
 	private int aX, aY, sY, sX;
 	private int direction; // 0 = right, 1 = down, 2 = left, 3 = up, 4 = none
 	private int[] dX = {1, 0, -1, 0, 0}, dY = {0, 1, 0, -1, 0};
 	boolean gameOver = true, buffed = false;
 	ArrayList<Block> snake;
+	ArrayList<Block> barriers;
 	Block apple;
 	
 	// images + music
@@ -43,30 +45,76 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		return (int)(Math.random() * (hi - lo + 1)) + lo;
 	}
 	private void moveApple() {
-		aX = rand(0, cols - 1);
-		aY = rand(0, rows - 1);
-		apple = new Block(aX, aY, 0);
+		ArrayList<Block> pos = new ArrayList<Block>();
+		for (int i = 0; i < cols; ++i) {
+			for (int j = 0; j < rows; ++j) {
+				boolean ok = true;
+				for (Block b : snake)
+					ok &= (b.getX() != i || b.getY() != j);
+				
+				if (ok)
+					pos.add(new Block(i, j, 0));
+			}
+		}
+		
+		int ind = rand(0, pos.size() - 1);
+		apple = pos.get(ind);
+		aX = apple.getX();
+		aY = apple.getY();
 		
 		int rng = rand(1, 100);
-		if (rng % 5 == 0) {
+		if (rng % 10 == 0) {
 			apple.changePicture("/imgs/buffed_apple.png");
 			buffed = true;
 		} else {
 			buffed = false;
 		}
 	}
-	private void reset() { // reset round
-		moveApple();
+	private void resetBarriers() {
+		ArrayList<Block> pos = new ArrayList<Block>();
+		for (int i = 0; i < cols; ++i) {
+			for (int j = 0; j < rows; ++j) {
+				boolean ok = (i != aX || j != aY);
+				for (Block b : snake)
+					ok &= (b.getX() != i || b.getY() != j);
+				
+				if (ok)
+					pos.add(new Block(i, j, 2));
+			}
+		}
 		
+		barriers.clear();
+		while (barriers.size() < numBarriers) {
+			int ind = rand(0, pos.size() - 1);
+			barriers.add(pos.remove(ind));
+		}
+	}
+	private String getHeadType() {
+		int dist = Math.abs(sX - aX) + Math.abs(sY - aY);
+		if (dist <= 5)
+			return "tongue";
+		else
+			return "head";
+	}
+	private void setHead(int dir) {
+		Block b = snake.get(snake.size() - 2);
+		b.changePicture("/imgs/snakebody_" + (dir % 2) + ".png");
+		Block h = snake.get(snake.size() - 1);
+		h.changePicture("/imgs/snake" + getHeadType() + "_" + dir + ".png");
+	}
+	private void reset() { // reset round		
 		snake = new ArrayList<Block>();
 		snake.add(new Block(1, 6, 1));
 		snake.add(new Block(2, 6, 1));
 		snake.add(new Block(3, 6, 1));
 		snake.add(new Block(4, 6, 1));
+		setHead(0);
 		sX = 4;
 		sY = 6;
 		direction = 4;
 		score = 0;
+		
+		moveApple();
 	}
 	private void moveSnake() {
 		if (direction == 4)
@@ -85,6 +133,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			sX = nX;
 			sY = nY;
 			snake.add(new Block(sX, sY, 1));
+			setHead(direction);
 			if (aX == sX && aY == sY) {
 				moveApple();
 				++score;
@@ -122,7 +171,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.addMouseMotionListener(this);
 		f.addKeyListener(this);
 		
-		Timer t = new Timer(70, this);
+		Timer t = new Timer(120, this);
 		t.start();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);

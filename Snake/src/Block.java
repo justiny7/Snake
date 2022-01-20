@@ -26,8 +26,11 @@ public class Block {
 			img = getImage("/imgs/red_apple.png");
 			scale = 0.25;
 		} else if (type == 1) {
-			img = getImage("/imgs/emerald_block.png");
-			scale = 0.12;
+			img = getImage("/imgs/snakebody_0.png");
+			scale = 0.048;
+		} else if (type == 2) {
+			img = getImage("");
+			scale = 1.0;
 		}
 		tx = AffineTransform.getTranslateInstance(0, 0);
 	}

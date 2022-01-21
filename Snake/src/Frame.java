@@ -17,6 +17,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -33,14 +35,20 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int direction; // 0 = right, 1 = down, 2 = left, 3 = up, 4 = none
 	private int[] dX = {1, 0, -1, 0, 0}, dY = {0, 1, 0, -1, 0};
 	boolean gameOver = true, buffed = false;
-	ArrayList<Block> snake;
-	ArrayList<Block> barriers;
+	ArrayList<Block> snake, barriers, background;
+	Deque<Integer> ops = new LinkedList<Integer>();
 	Block apple;
 	
 	// images + music
 	
 	// character properties
 	
+	private void makeBackground() {
+		background = new ArrayList<Block>();
+		for (int i = 0; i < cols; ++i)
+			for (int j = 0; j < rows; ++j)
+				background.add(new Block(i, j, 3));
+	}
 	private int rand(int lo, int hi) { // random number between lo and hi
 		return (int)(Math.random() * (hi - lo + 1)) + lo;
 	}
@@ -102,7 +110,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		Block h = snake.get(snake.size() - 1);
 		h.changePicture("/imgs/snake" + getHeadType() + "_" + dir + ".png");
 	}
-	private void reset() { // reset round		
+	private void resetSnake() {
 		snake = new ArrayList<Block>();
 		snake.add(new Block(1, 6, 1));
 		snake.add(new Block(2, 6, 1));
@@ -113,7 +121,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		sY = 6;
 		direction = 4;
 		score = 0;
-		
+	}
+	private void reset() { // reset round
+		makeBackground();
+		resetSnake();
 		moveApple();
 	}
 	private void moveSnake() {
@@ -150,9 +161,16 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 		
 		super.paintComponent(g);
+		for (Block b : background)
+			b.paint(g);
 		apple.paint(g);
 		for (Block b : snake)
 			b.paint(g);
+		
+		if (!ops.isEmpty()) {
+			System.out.println("changing direction to " + ops.peekFirst());
+			direction = ops.removeFirst();
+		}
 		
 		moveSnake();
 	}
@@ -221,12 +239,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 	private void changeDir(int dir) {
-		if (direction == dir || direction == (dir + 2) % 4)
-			return;
+		int test = direction;
+		if (!ops.isEmpty())
+			test = ops.pollLast();
 		
-		int nX = sX + dX[dir], nY = sY + dY[dir];
-		if (nX != snake.get(score + 2).getX() || nY != snake.get(score + 2).getY())
-			direction = dir;
+		if (test != dir && test % 4 != (dir + 2) % 4) {
+			ops.addLast(dir);
+			System.out.println("added: " + dir);
+		}
 	}
 	@Override
 	public void keyPressed(KeyEvent arg0) {

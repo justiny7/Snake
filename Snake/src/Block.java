@@ -31,6 +31,9 @@ public class Block {
 		} else if (type == 2) {
 			img = getImage("");
 			scale = 1.0;
+		} else if (type == 3) {
+			img = getImage("/imgs/floor.png");
+			scale = 0.247;
 		}
 		tx = AffineTransform.getTranslateInstance(0, 0);
 	}

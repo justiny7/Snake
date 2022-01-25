@@ -32,7 +32,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int score, highScore = 0;
 	private int numBarriers = 10;
 	private int viewRadius = 5;
-	private int aX, aY, sY, sX;
 	private int direction; // 0 = right, 1 = down, 2 = left, 3 = up, 4 = none
 	private int[] dX = {1, 0, -1, 0, 0}, dY = {0, 1, 0, -1, 0};
 	boolean gameOver = true, buffed = false, eatBuffed = false;
@@ -62,10 +61,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			}
 		}
 		
-		int ind = rand(0, pos.size() - 1);
-		apple = pos.get(ind);
-		aX = apple.getX();
-		aY = apple.getY();
+		apple = pos.get(rand(0, pos.size() - 1));
 		
 		int rng = rand(1, 100);
 		if (rng % 10 == 0) {
@@ -80,7 +76,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 	int distance(Block a, Block b) {
 		return (int)Math.floor(Math.sqrt(sq(a.getX() - b.getX()) + sq(a.getY() - b.getY())));
-		// return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
 	}
 	private void genBarriers() {
 		ArrayList<Block> pos = new ArrayList<Block>();
@@ -90,7 +85,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				if (distance(snake.get(snake.size() - 1), here) <= 4)
 					continue;
 				
-				boolean ok = (i != aX || j != aY);
+				boolean ok = (i != apple.getX() || j != apple.getY());
 				for (Block b : snake)
 					ok &= (b.getX() != i || b.getY() != j);
 				
@@ -108,7 +103,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private boolean canGetApple() {
 		int bad = 0;
 		for (int i = 0; i < 4; ++i) {
-			int nX = aX + dX[i], nY = aY + dY[i];
+			int nX = apple.getX() + dX[i], nY = apple.getY() + dY[i];
 			if (nX < 0 || nX >= cols || nY < 0 || nY >= rows)
 				++bad;
 			else {
@@ -129,8 +124,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		} while (!canGetApple());
 	}
 	private String getHeadType() {
-		int dist = (int)Math.floor(Math.sqrt(sq(sX - aX) + sq(sY - aY)));
-		if (dist <= 5)
+		if (direction == 4 || distance(apple, snake.get(snake.size() - 1)) <= 5)
 			return "tongue";
 		else
 			return "head";
@@ -138,20 +132,19 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private void setHead(int dir) {
 		Block b = snake.get(snake.size() - 2);
 		b.changePicture("/imgs/snakebody_" + (dir % 2) + ".png");
-		Block h = snake.get(snake.size() - 1);
-		h.changePicture("/imgs/snake" + getHeadType() + "_" + dir + ".png");
+		Block head = snake.get(snake.size() - 1);
+		head.changePicture("/imgs/snake" + getHeadType() + "_" + dir + ".png");
 	}
 	private void resetSnake() {
+		direction = 4;
+		score = 0;
+		
 		snake = new ArrayList<Block>();
 		snake.add(new Block(1, 6, 1));
 		snake.add(new Block(2, 6, 1));
 		snake.add(new Block(3, 6, 1));
 		snake.add(new Block(4, 6, 1));
 		setHead(0);
-		sX = 4;
-		sY = 6;
-		direction = 4;
-		score = 0;
 	}
 	private void reset() { // reset round
 		buffed = eatBuffed = false;
@@ -165,8 +158,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (direction == 4)
 			return;
 		
-		int nX = sX + dX[direction];
-		int nY = sY + dY[direction];
+		Block head = snake.get(snake.size() - 1);
+		int nX = head.getX() + dX[direction];
+		int nY = head.getY() + dY[direction];
 		
 		boolean bad = (nX < 0 || nX >= cols) || (nY < 0 || nY >= rows);
 		for (Block b : snake)
@@ -177,11 +171,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (bad)
 			gameOver = true;
 		else {
-			sX = nX;
-			sY = nY;
-			snake.add(new Block(sX, sY, 1));
+			snake.add(new Block(nX, nY, 1));
 			setHead(direction);
-			if (aX == sX && aY == sY) {
+			if (apple.getX() == nX && apple.getY() == nY) {
 				eatBuffed = buffed;
 				moveApple();
 				resetBarriers();
@@ -227,6 +219,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 	
 	public static void main(String[] arg) {
+		Music bg = new Music("mii.wav", true);
+		bg.play();
+		
 		Frame f = new Frame();
 	}
 	

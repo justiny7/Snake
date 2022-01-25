@@ -27,21 +27,18 @@ import javax.swing.Timer;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener, MouseMotionListener {
 	// game properties
-	private int width = 607, height = 630, blockSize = 40;
+	private int width = 607, height = 660, blockSize = 40;
 	private int rows = 15, cols = 15;
-	private int score;
-	private int numBarriers = 15;
+	private int score, highScore = 0;
+	private int numBarriers = 10;
+	private int viewRadius = 5;
 	private int aX, aY, sY, sX;
 	private int direction; // 0 = right, 1 = down, 2 = left, 3 = up, 4 = none
 	private int[] dX = {1, 0, -1, 0, 0}, dY = {0, 1, 0, -1, 0};
-	boolean gameOver = true, buffed = false;
+	boolean gameOver = true, buffed = false, eatBuffed = false;
 	ArrayList<Block> snake, barriers, background;
 	Deque<Integer> ops = new LinkedList<Integer>();
 	Block apple;
-	
-	// images + music
-	
-	// character properties
 	
 	private void makeBackground() {
 		background = new ArrayList<Block>();
@@ -78,27 +75,61 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			buffed = false;
 		}
 	}
-	private void resetBarriers() {
+	private int sq(int x) {
+		return x * x;
+	}
+	int distance(Block a, Block b) {
+		return (int)Math.floor(Math.sqrt(sq(a.getX() - b.getX()) + sq(a.getY() - b.getY())));
+		// return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
+	}
+	private void genBarriers() {
 		ArrayList<Block> pos = new ArrayList<Block>();
 		for (int i = 0; i < cols; ++i) {
 			for (int j = 0; j < rows; ++j) {
+				Block here = new Block(i, j, 2);
+				if (distance(snake.get(snake.size() - 1), here) <= 4)
+					continue;
+				
 				boolean ok = (i != aX || j != aY);
 				for (Block b : snake)
 					ok &= (b.getX() != i || b.getY() != j);
 				
 				if (ok)
-					pos.add(new Block(i, j, 2));
+					pos.add(here);
 			}
 		}
 		
-		barriers.clear();
+		barriers = new ArrayList<Block>();
 		while (barriers.size() < numBarriers) {
 			int ind = rand(0, pos.size() - 1);
 			barriers.add(pos.remove(ind));
 		}
 	}
+	private boolean canGetApple() {
+		int bad = 0;
+		for (int i = 0; i < 4; ++i) {
+			int nX = aX + dX[i], nY = aY + dY[i];
+			if (nX < 0 || nX >= cols || nY < 0 || nY >= rows)
+				++bad;
+			else {
+				boolean f = false;
+				for (Block b : barriers)
+					f |= (b.getX() == nX && b.getY() == nY);
+				
+				if (f)
+					++bad;
+			}
+		}
+		
+		return bad != 4;
+	}
+	private void resetBarriers() {
+		do {
+			genBarriers();
+		} while (!canGetApple());
+	}
 	private String getHeadType() {
-		int dist = Math.abs(sX - aX) + Math.abs(sY - aY);
+		int dist = (int)Math.floor(Math.sqrt(sq(sX - aX) + sq(sY - aY)));
 		if (dist <= 5)
 			return "tongue";
 		else
@@ -123,9 +154,12 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		score = 0;
 	}
 	private void reset() { // reset round
+		buffed = eatBuffed = false;
+		ops.clear();
 		makeBackground();
 		resetSnake();
 		moveApple();
+		resetBarriers();
 	}
 	private void moveSnake() {
 		if (direction == 4)
@@ -137,6 +171,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		boolean bad = (nX < 0 || nX >= cols) || (nY < 0 || nY >= rows);
 		for (Block b : snake)
 			bad |= (b.getX() == nX && b.getY() == nY);
+		for (Block b : barriers)
+			bad |= (b.getX() == nX && b.getY() == nY);
 		
 		if (bad)
 			gameOver = true;
@@ -146,8 +182,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			snake.add(new Block(sX, sY, 1));
 			setHead(direction);
 			if (aX == sX && aY == sY) {
+				eatBuffed = buffed;
 				moveApple();
-				++score;
+				resetBarriers();
+				highScore = Math.max(highScore, ++score);
 			} else {
 				snake.remove(0);
 			}
@@ -161,16 +199,29 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 		
 		super.paintComponent(g);
-		for (Block b : background)
+		for (Block b : background) {
+			if (eatBuffed || distance(b, snake.get(snake.size() - 1)) <= viewRadius)
+				b.changePicture("/imgs/floor.png");
+			else
+				b.changePicture("imgs/floor_dark.png");
 			b.paint(g);
+		}
 		apple.paint(g);
 		for (Block b : snake)
 			b.paint(g);
+		for (Block b : barriers)
+			if (eatBuffed || distance(b, snake.get(snake.size() - 1)) <= viewRadius)
+				b.paint(g);
 		
-		if (!ops.isEmpty()) {
-			System.out.println("changing direction to " + ops.peekFirst());
+		Font font = new Font("Consolas", Font.BOLD, 20);
+		g.setFont(font);
+		
+		g.setColor(Color.BLACK);
+		g.drawString("Score: " + score, 5, 625);
+		g.drawString("High score: " + highScore, 425, 625);
+		
+		if (!ops.isEmpty())
 			direction = ops.removeFirst();
-		}
 		
 		moveSnake();
 	}
@@ -241,12 +292,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private void changeDir(int dir) {
 		int test = direction;
 		if (!ops.isEmpty())
-			test = ops.pollLast();
+			test = ops.peekLast();
 		
-		if (test != dir && test % 4 != (dir + 2) % 4) {
+		if (test != dir && test % 4 != (dir + 2) % 4)
 			ops.addLast(dir);
-			System.out.println("added: " + dir);
-		}
 	}
 	@Override
 	public void keyPressed(KeyEvent arg0) {

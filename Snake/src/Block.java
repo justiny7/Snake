@@ -29,8 +29,8 @@ public class Block {
 			img = getImage("/imgs/snakebody_0.png");
 			scale = 0.048;
 		} else if (type == 2) {
-			img = getImage("");
-			scale = 1.0;
+			img = getImage("/imgs/barrier.png");
+			scale = 0.247;
 		} else if (type == 3) {
 			img = getImage("/imgs/floor.png");
 			scale = 0.247;

@@ -27,14 +27,15 @@ import javax.swing.Timer;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener, MouseMotionListener {
 	// game properties
-	private int width = 607, height = 660, blockSize = 40;
+	private int width = 607, height = 660;
 	private int rows = 15, cols = 15;
 	private int score, highScore = 0;
 	private int numBarriers = 10;
 	private int viewRadius = 5;
 	private int direction; // 0 = right, 1 = down, 2 = left, 3 = up, 4 = none
 	private int[] dX = {1, 0, -1, 0, 0}, dY = {0, 1, 0, -1, 0};
-	boolean gameOver = true, buffed = false, eatBuffed = false;
+	private boolean gameOver = true, buffed = false, eatBuffed = false;
+	private boolean first = true;
 	ArrayList<Block> snake, barriers, background;
 	Deque<Integer> ops = new LinkedList<Integer>();
 	Block apple;
@@ -178,6 +179,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				moveApple();
 				resetBarriers();
 				highScore = Math.max(highScore, ++score);
+				
+				Music chomp = new Music("chomp.wav", false);
+				chomp.play();
 			} else {
 				snake.remove(0);
 			}
@@ -187,6 +191,13 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (gameOver) {
 			reset();
 			gameOver = false;
+			
+			if (!first) {
+				Music oof = new Music("oof.wav", false);
+				oof.play();
+			}
+			
+			first = false;
 			return;
 		}
 		
@@ -235,7 +246,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.addMouseMotionListener(this);
 		f.addKeyListener(this);
 		
-		Timer t = new Timer(120, this);
+		Timer t = new Timer(100, this);
 		t.start();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
@@ -289,7 +300,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (!ops.isEmpty())
 			test = ops.peekLast();
 		
-		if (test != dir && test % 4 != (dir + 2) % 4)
+		if (test == 4 || test % 2 != dir % 2)
 			ops.addLast(dir);
 	}
 	@Override

@@ -147,14 +147,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		snake.add(new Block(4, 6, 1));
 		setHead(0);
 	}
-	private void reset() { // reset round
-		buffed = eatBuffed = false;
-		ops.clear();
-		makeBackground();
-		resetSnake();
-		moveApple();
-		resetBarriers();
-	}
 	private void moveSnake() {
 		if (direction == 4)
 			return;
@@ -187,6 +179,15 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			}
 		}
 	}
+	private void reset() { // reset round
+		buffed = eatBuffed = false;
+		ops.clear();
+		makeBackground();
+		resetSnake();
+		moveApple();
+		resetBarriers();
+	}
+	
 	public void paint(Graphics g) {
 		if (gameOver) {
 			reset();

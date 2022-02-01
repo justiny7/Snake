@@ -7,8 +7,8 @@ A fun variation of the classic game of Snake!
 ## Game Mechanics
 This version of Snake preserves all aspects of the original, such as eating apples to gain length, suicide crashes, and wall collisions. However, a
 new twist is the addition of randomly generated barriers, a limited field of vision, as well as a new type of apple. The game runs  just like its original
-counterpart except that you die when hit a barrier, which swap positions every time you eat an apple. The barriers are obscured by a limited view
-radius, but consuming a golden apple, which have a one in ten chance of appearing, dispels the darkness for at least until the next apple is eaten.
+counterpart except that you die when hit a barrier, which swaps positions every time you eat an apple. The barriers are obscured by a limited view
+radius, but consuming a golden apple, which have a one in ten chance of appearing, dispels the darkness until the next non-golden apple is eaten.
 
 ## Implementation Specifics
 
@@ -73,4 +73,7 @@ regular queue in order to have access to the peekLast function, which determines
 current last move). If the move being entered is valid, then it pushes it to the back of the deque to be processed once its turn comes.
 
 ## Conclusion
-This game was really fun to code and it's probably one of my favorite projects that (my partner and) I have made in AP CSA this year. We hope you have fun with it! gg
+This game was really fun to code and it's probably one of my favorite projects that (my partner and) I have made in AP CSA this year. We hope you have fun with it! gg\
+\
+Disclaimer: The "lag" isn't actually lag, it's just the low framerate to make the game not impossible - if you want it to be smoother, you can increase it in the
+code.
